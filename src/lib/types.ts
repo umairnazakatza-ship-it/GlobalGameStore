@@ -81,7 +81,7 @@ export interface Profile {
   phone: string | null;
   whatsapp: string | null;
   country: string | null;
-  role: "user" | "admin";
+  role: "user" | "admin" | "sub_admin";
   credits_balance: number;
   created_at: string;
 }

@@ -88,7 +88,7 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
-          {user?.role === "admin" && (
+          {(user?.role === "admin" || user?.role === "sub_admin") && (
             <Link
               href="/admin"
               className="rounded-lg px-3 py-2 text-sm font-medium text-accent-chrome transition hover:bg-surface/60"
@@ -161,7 +161,7 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
-          {user?.role === "admin" && (
+          {(user?.role === "admin" || user?.role === "sub_admin") && (
             <Link
               href="/admin"
               onClick={() => setMobileOpen(false)}

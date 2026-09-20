@@ -31,6 +31,14 @@ export async function requireAdmin(): Promise<Profile> {
   return profile;
 }
 
+export async function requireCatalogManager(): Promise<Profile> {
+  const profile = await requireProfile();
+  if (profile.role !== "admin" && profile.role !== "sub_admin") {
+    throw new Error("FORBIDDEN");
+  }
+  return profile;
+}
+
 export function authError(e: unknown) {
   if (e instanceof Error && e.message === "UNAUTHENTICATED") {
     return Response.json({ error: "Please log in" }, { status: 401 });

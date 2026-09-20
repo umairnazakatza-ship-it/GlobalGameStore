@@ -1,4 +1,4 @@
-import { requireAdmin, authError } from "@/lib/auth";
+import { requireAdmin, requireCatalogManager, authError } from "@/lib/auth";
 import { requireAdminClient } from "@/lib/supabase/admin";
 import { revalidateTag } from "next/cache";
 
@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    await requireAdmin();
+    await requireCatalogManager();
     const admin = requireAdminClient();
 
     const [

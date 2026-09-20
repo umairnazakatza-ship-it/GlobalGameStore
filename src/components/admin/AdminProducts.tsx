@@ -26,7 +26,7 @@ interface ProductRow extends Product {
   available: number;
 }
 
-export default function AdminProducts() {
+export default function AdminProducts({ isSubAdmin = false }: { isSubAdmin?: boolean }) {
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
@@ -414,12 +414,14 @@ if (d.products) {
             placeholder="Search products…"
             className="rounded-xl border border-border bg-bg px-4 py-2.5 text-sm text-text-primary transition focus:border-accent-chrome focus:outline-none focus:ring-2 focus:ring-accent-chrome/15"
           />
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 rounded-xl bg-accent-oxblood px-4 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-accent-oxblood/90 active:scale-[0.98]"
-          >
-            <Plus className="h-4 w-4" /> New Product
-          </button>
+          {!isSubAdmin && (
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 rounded-xl bg-accent-oxblood px-4 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-accent-oxblood/90 active:scale-[0.98]"
+            >
+              <Plus className="h-4 w-4" /> New Product
+            </button>
+          )}
         </div>
       </div>
 
@@ -457,7 +459,7 @@ if (d.products) {
                 </div>
                 {expanded === p.id ? <ChevronUp className="h-5 w-5 text-text-muted" /> : <ChevronDown className="h-5 w-5 text-text-muted" />}
               </button>
-              <div className="flex gap-2">
+              {!isSubAdmin && <div className="flex gap-2">
                 <button
                   onClick={() => toggleSoldOut(p)}
                   className={`rounded-lg border px-2.5 py-2 text-xs font-bold transition ${
@@ -483,7 +485,7 @@ if (d.products) {
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
-              </div>
+              </div>}
             </div>
 
             {expanded === p.id && (
@@ -493,11 +495,11 @@ if (d.products) {
                     {editingVariantId === v.id ? (
                       <div className="space-y-3">
                         <div className="grid gap-3 sm:grid-cols-3">
-                          <input value={evName} onChange={(e) => setEvName(e.target.value)} placeholder="Variant name (e.g. 100 UC)" className={inputCls} />
+                          {!isSubAdmin && <input value={evName} onChange={(e) => setEvName(e.target.value)} placeholder="Variant name (e.g. 100 UC)" className={inputCls} />}
                           <input value={evPrice} onChange={(e) => setEvPrice(e.target.value)} type="number" min="0" step="0.01" placeholder="Price" className={inputCls} />
-                          <input value={evOrig} onChange={(e) => setEvOrig(e.target.value)} type="number" min="0" step="0.01" placeholder="Old price (optional)" className={inputCls} />
+                          {!isSubAdmin && <input value={evOrig} onChange={(e) => setEvOrig(e.target.value)} type="number" min="0" step="0.01" placeholder="Old price (optional)" className={inputCls} />}
                         </div>
-                        <div className="flex flex-wrap items-center gap-3">
+                        {!isSubAdmin && (<div className="flex flex-wrap items-center gap-3">
                           <label className="flex items-center gap-2 text-sm text-text-muted">
                             <input type="checkbox" checked={evActive} onChange={(e) => setEvActive(e.target.checked)} className="accent-accent-chrome" />
                             Active
@@ -525,7 +527,7 @@ if (d.products) {
                               Cancel
                             </button>
                           </div>
-                        </div>
+                        </div>)}
                       </div>
                     ) : (
                       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -552,7 +554,7 @@ if (d.products) {
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <button
+                          {!isSubAdmin && <button
                             onClick={() => toggleVariantSoldOut(v)}
                             className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition ${
                               v.sold_out
@@ -562,15 +564,15 @@ if (d.products) {
                             aria-label="Toggle variant sold out"
                           >
                             {v.sold_out ? "In stock" : "Sold out"}
-                          </button>
-                          <button
+                          </button>}
+                          {!isSubAdmin && <button
                             onClick={() => addCodes(v.id)}
                             className="rounded-lg bg-accent-oxblood px-3 py-1.5 text-xs font-bold text-white transition duration-200 hover:bg-accent-oxblood/90 active:scale-[0.97]"
                             disabled={!codesInput.trim()}
                           >
                             Add codes
-                          </button>
-                          <button
+                          </button>}
+                          {!isSubAdmin && <button
                             onClick={() => toggleCodes(v.id)}
                             className={`rounded-lg border p-1.5 transition ${
                               codesForVariant === v.id
@@ -581,7 +583,7 @@ if (d.products) {
                             title="View codes"
                           >
                             <KeyRound className="h-3.5 w-3.5" />
-                          </button>
+                          </button>}
                           <button
                             onClick={() => openEditVariant(v)}
                             className="rounded-lg border border-border p-1.5 text-text-muted hover:border-accent-chrome hover:text-accent-chrome"
@@ -589,13 +591,13 @@ if (d.products) {
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
-                          <button
+                          {!isSubAdmin && <button
                             onClick={() => deleteVariant(v.id)}
                             className="rounded-lg border border-border p-1.5 text-text-muted hover:border-red-500 hover:text-red-400"
                             aria-label="Delete variant"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          </button>}
                         </div>
                       </div>
                     )}
@@ -681,7 +683,7 @@ if (d.products) {
                   </div>
                 ))}
 
-                <div className="grid gap-3 rounded-xl border border-border bg-bg p-4 sm:grid-cols-4">
+                {!isSubAdmin && <div className="grid gap-3 rounded-xl border border-border bg-bg p-4 sm:grid-cols-4">
                   <input value={vName} onChange={(e) => setVName(e.target.value)} placeholder="Variant name (e.g. 100 UC)" className={inputCls} />
                   <input value={vPrice} onChange={(e) => setVPrice(e.target.value)} type="number" min="0" step="0.01" placeholder={vPriceOnRequest ? "Price (kept as 0)" : "Price"} className={inputCls} />
                   <input value={vOrig} onChange={(e) => setVOrig(e.target.value)} type="number" min="0" step="0.01" placeholder="Old price (optional)" className={inputCls} />
@@ -696,9 +698,9 @@ if (d.products) {
                     <input type="checkbox" checked={vPriceOnRequest} onChange={(e) => setVPriceOnRequest(e.target.checked)} className="accent-accent-chrome" />
                     New variant is contact-for-price (hidden price, customer asks on WhatsApp)
                   </label>
-                </div>
+                </div>}
 
-                <div className="rounded-xl border border-border bg-bg p-4">
+                {!isSubAdmin && <div className="rounded-xl border border-border bg-bg p-4">
                   <label className="mb-1.5 flex items-center gap-2 text-sm font-medium text-text-primary">
                     <KeyRound className="h-4 w-4 text-accent-chrome" /> Add codes for a variant
                   </label>
@@ -712,7 +714,7 @@ if (d.products) {
                   <p className="mt-1 text-xs text-text-muted">
                     Click &quot;Add codes&quot; on the variant you want to stock.
                   </p>
-                </div>
+                </div>}
               </div>
             )}
           </div>

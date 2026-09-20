@@ -33,7 +33,11 @@ export default function RegisterPage() {
         setConfirmed(true);
         return;
       }
-      router.push(data.profile?.role === "admin" ? "/admin" : "/account");
+      router.push(
+        data.profile?.role === "admin" || data.profile?.role === "sub_admin"
+          ? "/admin"
+          : "/account"
+      );
       router.refresh();
     } finally {
       setLoading(false);

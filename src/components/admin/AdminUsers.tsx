@@ -87,6 +87,24 @@ export default function AdminUsers() {
     load();
   };
 
+  const setRole = async (u: Profile, role: "user" | "sub_admin") => {
+    setBusy(true);
+    const res = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: u.id, role }),
+    });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) {
+      setNotice(data.error ?? "Could not update role");
+      return;
+    }
+    setNotice(role === "sub_admin" ? `${u.email} is now a sub-admin` : `${u.email} is now a regular user`);
+    setTimeout(() => setNotice(""), 4000);
+    load();
+  };
+
   if (loading) return <AdminSkeleton rows={5} />;
 
   return (
@@ -123,6 +141,11 @@ export default function AdminUsers() {
                         <Shield className="h-3 w-3" /> Admin
                       </span>
                     )}
+                    {u.role === "sub_admin" && (
+                      <span className="flex items-center gap-1 rounded-full bg-accent-chrome/15 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-accent-chrome">
+                        <Shield className="h-3 w-3" /> Sub-admin
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-text-muted">
                     {u.full_name || "-"} · joined {new Date(u.created_at).toLocaleDateString()}
@@ -143,6 +166,13 @@ export default function AdminUsers() {
                     className="flex items-center gap-1.5 rounded-lg border border-red-500/40 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/10"
                   >
                     <Minus className="h-3.5 w-3.5" /> Deduct
+                  </button>
+                  <button
+                    onClick={() => setRole(u, u.role === "sub_admin" ? "user" : "sub_admin")}
+                    disabled={busy || u.role === "admin"}
+                    className="rounded-lg border border-accent-chrome/40 px-3 py-1.5 text-xs font-bold text-accent-chrome hover:bg-accent-chrome/10 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {u.role === "sub_admin" ? "Remove sub-admin" : "Make sub-admin"}
                   </button>
                   <button
                     onClick={() => deleteUser(u)}

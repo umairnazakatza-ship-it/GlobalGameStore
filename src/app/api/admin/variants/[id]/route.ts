@@ -1,4 +1,4 @@
-import { requireAdmin, authError } from "@/lib/auth";
+import { requireAdmin, requireCatalogManager, authError } from "@/lib/auth";
 import { requireAdminClient } from "@/lib/supabase/admin";
 import { revalidateTag } from "next/cache";
 
@@ -10,14 +10,21 @@ interface RouteContext {
 
 export async function PUT(req: Request, ctx: RouteContext) {
   try {
-    await requireAdmin();
+    const profile = await requireCatalogManager();
     const { id } = await ctx.params;
     const admin = requireAdminClient();
     const body = await req.json();
 
     const allowed: Record<string, unknown> = {};
-    for (const key of ["name", "price", "original_price", "active", "sold_out", "price_on_request"]) {
+    const allowedKeys =
+      profile.role === "sub_admin"
+        ? ["price", "original_price"]
+        : ["name", "price", "original_price", "active", "sold_out", "price_on_request"];
+    for (const key of allowedKeys) {
       if (key in body) allowed[key] = body[key];
+    }
+    if (Object.keys(allowed).length === 0) {
+      return Response.json({ error: "Only variant prices can be changed" }, { status: 400 });
     }
 
     const { data, error } = await admin

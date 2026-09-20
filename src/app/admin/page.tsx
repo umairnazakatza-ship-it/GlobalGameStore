@@ -34,7 +34,9 @@ export default function AdminPage() {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
-        setProfile(d.profile ?? null);
+        const nextProfile = d.profile ?? null;
+        setProfile(nextProfile);
+        if (nextProfile?.role === "sub_admin") setTab("products");
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -54,7 +56,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "sub_admin")) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
         <ShieldAlert className="mx-auto h-16 w-16 text-red-400" />
@@ -72,14 +74,17 @@ export default function AdminPage() {
     );
   }
 
-  const tabs: { id: Tab; label: string; icon: typeof Package }[] = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "products", label: "Products", icon: Package },
-    { id: "orders", label: "Orders", icon: ShoppingCart },
-    { id: "sold", label: "Sold Codes", icon: ShoppingBag },
-    { id: "users", label: "Users & Credits", icon: Users },
-    { id: "settings", label: "Settings", icon: Settings },
-  ];
+  const tabs: { id: Tab; label: string; icon: typeof Package }[] =
+    profile.role === "sub_admin"
+      ? [{ id: "products", label: "Products & Prices", icon: Package }]
+      : [
+          { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { id: "products", label: "Products", icon: Package },
+          { id: "orders", label: "Orders", icon: ShoppingCart },
+          { id: "sold", label: "Sold Codes", icon: ShoppingBag },
+          { id: "users", label: "Users & Credits", icon: Users },
+          { id: "settings", label: "Settings", icon: Settings },
+        ];
 
   const adminName = profile?.full_name?.split(" ")[0] || profile?.email?.split("@")[0] || "Admin";
   const adminInitial = (profile?.full_name?.[0] || profile?.email?.[0] || "A").toUpperCase();
@@ -95,7 +100,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-2">
               <h1 className="font-serif text-3xl font-bold text-text-primary">Admin Panel</h1>
               <span className="rounded-full border border-accent-chrome/40 bg-accent-chrome/15 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-accent-chrome">
-                Admin
+                {profile.role === "sub_admin" ? "Sub-admin" : "Admin"}
               </span>
             </div>
             <p className="mt-0.5 text-sm text-text-muted">
@@ -129,7 +134,7 @@ export default function AdminPage() {
       </div>
 
       {tab === "dashboard" && <AdminDashboard />}
-      {tab === "products" && <AdminProducts />}
+      {tab === "products" && <AdminProducts isSubAdmin={profile.role === "sub_admin"} />}
       {tab === "orders" && <AdminOrders />}
       {tab === "sold" && <AdminSoldCodes />}
       {tab === "users" && <AdminUsers />}
