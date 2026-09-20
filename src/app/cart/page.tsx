@@ -89,6 +89,7 @@ export default function CartPage() {
                     </span>
                     <button
                       onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                      disabled={!!item.stock && item.stock > 0 && item.quantity >= item.stock}
                       className="p-1 text-text-muted transition hover:text-text-primary"
                       aria-label="Increase"
                     >

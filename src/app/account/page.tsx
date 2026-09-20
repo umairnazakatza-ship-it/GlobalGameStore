@@ -73,6 +73,9 @@ export default function AccountPage() {
   const [deleteMsg, setDeleteMsg] = useState("");
 
   const [copied, setCopied] = useState<string | null>(null);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [removingOrders, setRemovingOrders] = useState(false);
+  const [ordersMessage, setOrdersMessage] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -173,6 +176,48 @@ export default function AccountPage() {
     navigator.clipboard?.writeText(code).catch(() => {});
     setCopied(code);
     setTimeout(() => setCopied(null), 1500);
+  };
+
+  const toggleOrderSelection = (orderId: string) => {
+    setSelectedOrderIds((current) =>
+      current.includes(orderId)
+        ? current.filter((id) => id !== orderId)
+        : [...current, orderId]
+    );
+  };
+
+  const toggleAllOrders = () => {
+    setSelectedOrderIds((current) =>
+      current.length === orders.length ? [] : orders.map((order) => order.id)
+    );
+  };
+
+  const removeSelectedOrders = async () => {
+    if (selectedOrderIds.length === 0) return;
+    if (
+      !window.confirm(
+        `Remove ${selectedOrderIds.length} selected order${selectedOrderIds.length === 1 ? "" : "s"} from your history? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setRemovingOrders(true);
+    setOrdersMessage("");
+    const res = await fetch("/api/account/orders", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderIds: selectedOrderIds }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setOrders((current) => current.filter((order) => !selectedOrderIds.includes(order.id)));
+      setSelectedOrderIds([]);
+      setOrdersMessage("Selected orders removed from your history.");
+    } else {
+      setOrdersMessage(data.error ?? "Could not remove selected orders");
+    }
+    setRemovingOrders(false);
   };
 
   const tabs: { id: Tab; label: string; icon: typeof Package }[] = [
@@ -329,6 +374,35 @@ export default function AccountPage() {
       {/* ---------------- Orders ---------------- */}
       {tab === "orders" && (
         <div className="space-y-4">
+          {orders.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-3">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-text-muted">
+                <input
+                  type="checkbox"
+                  checked={selectedOrderIds.length === orders.length}
+                  onChange={toggleAllOrders}
+                  className="h-4 w-4 accent-accent-chrome"
+                />
+                Select all orders
+              </label>
+              <div className="flex items-center gap-3">
+                {ordersMessage && <span className="text-sm text-text-muted">{ordersMessage}</span>}
+                <button
+                  type="button"
+                  onClick={removeSelectedOrders}
+                  disabled={selectedOrderIds.length === 0 || removingOrders}
+                  className="flex items-center gap-2 rounded-lg border border-red-500/40 px-3 py-2 text-sm font-bold text-red-300 transition hover:border-red-500 hover:bg-red-500 hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {removingOrders ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  Remove selected{selectedOrderIds.length > 0 ? ` (${selectedOrderIds.length})` : ""}
+                </button>
+              </div>
+            </div>
+          )}
           {orders.length === 0 && (
             <EmptyState
               icon={Package}
@@ -340,17 +414,26 @@ export default function AccountPage() {
           {orders.map((o) => (
             <div key={o.id} className="rounded-lg border border-border bg-surface p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-mono font-bold text-text-primary">
-                    #{o.order_number}
-                    <span className="ml-3 font-mono text-sm font-normal text-text-muted">
-                      {new Date(o.created_at).toLocaleString()}
-                    </span>
-                  </p>
-                  <p className="mt-1 text-sm text-text-muted">
-                    {o.payment_method === "credits" ? "Paid with credits" : "WhatsApp order"} ·{" "}
-                    <span className="font-mono text-price">{formatPrice(o.total)}</span>
-                  </p>
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedOrderIds.includes(o.id)}
+                    onChange={() => toggleOrderSelection(o.id)}
+                    aria-label={`Select order ${o.order_number}`}
+                    className="mt-1 h-4 w-4 accent-accent-chrome"
+                  />
+                  <div>
+                    <p className="font-mono font-bold text-text-primary">
+                      #{o.order_number}
+                      <span className="ml-3 font-mono text-sm font-normal text-text-muted">
+                        {new Date(o.created_at).toLocaleString()}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-sm text-text-muted">
+                      {o.payment_method === "credits" ? "Paid with credits" : "WhatsApp order"} ·{" "}
+                      <span className="font-mono text-price">{formatPrice(o.total)}</span>
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`rounded-full px-3 py-1 font-mono text-xs font-semibold ${STATUS_COLORS[o.status]}`}>

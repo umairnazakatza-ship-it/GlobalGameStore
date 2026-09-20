@@ -75,6 +75,41 @@ export async function POST(req: Request) {
     );
   }
 
+  const requestedByVariant = new Map<string, number>();
+  for (const item of body.items) {
+    const quantity = Math.max(1, Math.min(99, Math.floor(Number(item.quantity))));
+    requestedByVariant.set(
+      item.variantId,
+      (requestedByVariant.get(item.variantId) ?? 0) + quantity
+    );
+  }
+  const { data: availableCodes, error: stockError } = await admin
+    .from("codes")
+    .select("variant_id")
+    .in("variant_id", variantIds)
+    .eq("status", "available");
+  if (stockError) {
+    console.error("checkout stock lookup error:", stockError);
+    return Response.json({ error: "Could not verify item availability" }, { status: 500 });
+  }
+
+  const availableByVariant = new Map<string, number>();
+  for (const code of availableCodes ?? []) {
+    availableByVariant.set(
+      code.variant_id,
+      (availableByVariant.get(code.variant_id) ?? 0) + 1
+    );
+  }
+  for (const [variantId, requested] of requestedByVariant) {
+    const available = availableByVariant.get(variantId) ?? 0;
+    if (available > 0 && requested > available) {
+      return Response.json(
+        { error: `Only ${available} code${available === 1 ? "" : "s"} available for one or more selected items` },
+        { status: 400 }
+      );
+    }
+  }
+
   const items: CartItem[] = body.items.map((raw) => {
     const v = variants.find((x) => x.id === raw.variantId)!;
     const product = (v as unknown as {
@@ -88,7 +123,7 @@ export async function POST(req: Request) {
       productImage: product.image_url,
       variantName: v.name,
       unitPrice: Number(v.price),
-      quantity: Math.max(1, Math.min(99, Math.floor(raw.quantity))),
+      quantity: Math.max(1, Math.min(99, Math.floor(Number(raw.quantity)))),
     };
   });
 

@@ -171,7 +171,10 @@ export default function ProductBuy({
           ) : (
             <button
               key={v.id}
-              onClick={() => setSelected(v)}
+              onClick={() => {
+                setSelected(v);
+                setQty(1);
+              }}
               disabled={v.soldOut}
               className={`rounded-xl border px-4 py-3 text-left transition duration-200 active:scale-[0.99] ${
                 v.soldOut

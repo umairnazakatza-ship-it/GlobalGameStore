@@ -63,13 +63,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => {
       const existing = prev.find((i) => i.variantId === item.variantId);
       if (existing) {
+        const requestedQuantity = existing.quantity + item.quantity;
+        const quantity =
+          existing.stock && existing.stock > 0
+            ? Math.min(existing.stock, requestedQuantity)
+            : requestedQuantity;
         return prev.map((i) =>
           i.variantId === item.variantId
-            ? { ...i, quantity: i.quantity + item.quantity }
+            ? { ...i, stock: item.stock ?? i.stock, quantity }
             : i
         );
       }
-      return [...prev, item];
+      return [
+        ...prev,
+        {
+          ...item,
+          quantity:
+            item.stock && item.stock > 0
+              ? Math.min(item.stock, item.quantity)
+              : item.quantity,
+        },
+      ];
     });
     setIsOpen(true);
   }, []);
@@ -78,7 +92,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) =>
       quantity <= 0
         ? prev.filter((i) => i.variantId !== variantId)
-        : prev.map((i) => (i.variantId === variantId ? { ...i, quantity } : i))
+        : prev.map((i) =>
+            i.variantId === variantId
+              ? {
+                  ...i,
+                  quantity:
+                    i.stock && i.stock > 0
+                      ? Math.min(i.stock, quantity)
+                      : quantity,
+                }
+              : i
+          )
     );
   }, []);
 
