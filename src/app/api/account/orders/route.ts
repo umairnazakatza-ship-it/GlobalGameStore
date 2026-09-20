@@ -11,7 +11,7 @@ export async function GET() {
     const { data: orders, error } = await supabase
       .from("orders")
       .select(
-        "*, items:order_items(*, codes:order_codes(*)), delivered:order_codes(product_name, variant_name, code)"
+        "*, items:order_items(*, codes:order_codes(*)), delivered_codes:order_codes(product_name, variant_name, code)"
       )
       .eq("user_id", profile.id)
       .order("created_at", { ascending: false });

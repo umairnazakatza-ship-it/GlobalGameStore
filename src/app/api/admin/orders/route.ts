@@ -11,7 +11,7 @@ export async function GET() {
     const { data: orders } = await admin
       .from("orders")
       .select(
-        "*, items:order_items(*, codes:order_codes(product_name, variant_name, code)), delivered:order_codes(product_name, variant_name, code), user:profiles(email, full_name)"
+        "*, items:order_items(*, codes:order_codes(product_name, variant_name, code)), delivered_codes:order_codes(product_name, variant_name, code), user:profiles(email, full_name)"
       )
       .order("created_at", { ascending: false });
 
