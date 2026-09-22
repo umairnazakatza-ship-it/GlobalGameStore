@@ -148,8 +148,10 @@ export async function POST(req: Request) {
       .select("value")
       .eq("key", "whatsapp_number")
       .maybeSingle();
+    // The deployment environment is the source of truth for checkout links.
+    // Keep the database value as a fallback for older deployments without the env var.
     const storePhone =
-      (settings?.value as string) || process.env.WHATSAPP_NUMBER || "15551234567";
+      process.env.WHATSAPP_NUMBER || (settings?.value as string) || "15551234567";
 
     const message = buildWhatsAppOrderMessage({
       orderNumber,
